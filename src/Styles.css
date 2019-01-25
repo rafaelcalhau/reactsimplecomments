@@ -1,0 +1,47 @@
+.centered-block {
+    display: block !important;
+    text-align: center
+}
+.centered-block .field {
+    display: inline-block !important;
+}
+
+.clearedbox {
+    display: table;
+    width: 100%
+}
+
+.card.comment {
+    background-color: #f8f8f8 !important;
+    margin: .4em 0 !important
+}
+.card.comment .sentBy {
+    padding-left: 20px
+}
+
+.grey {
+    color: grey
+}
+
+i.icon.right.floated {
+    float: right;
+    margin-right: 0 !important
+}
+
+.login-buttons {
+    display: inline-block;
+}
+
+@media (max-width: 990px) {
+    .centered-block .field {
+        margin: .3em 0 !important
+    }
+    .login-buttons {
+        padding: 5px 0;
+        width: 100%
+    }
+
+    .ui.form {
+        padding: 0 10px !important
+    }
+}
