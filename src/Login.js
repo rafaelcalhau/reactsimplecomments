@@ -1,14 +1,12 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux'
 import { Divider, Form, Icon, Message } from 'semantic-ui-react'
+
+import { handleLoginInputChange } from './actions'
 
 class Login extends Component {
     constructor(props) {
         super(props)
-
-        this.state = {
-            email: '',
-            password: ''
-        }
 
         this.errorMessages = {
             'auth/email-already-in-use': 'The email address is already in use by another account.',
@@ -20,9 +18,8 @@ class Login extends Component {
     }
 
     handleChange = e => {
-        this.setState({
-            [e.target.name]: e.target.value
-        })
+        const { name, value } = e.target
+        this.props.handleLoginInputChange({ name, value })
     }
 
     handleDismiss = () => {
@@ -32,7 +29,7 @@ class Login extends Component {
     handleSubmit = e => {
         e.preventDefault();
 
-        const {email, password } = this.state
+        const {email, password } = this.props.fields
 
         if (email.length === 0 || password.length === 0) {
             return
@@ -44,7 +41,7 @@ class Login extends Component {
     handleSignUp = e => {
         e.preventDefault();
         
-        const {email, password } = this.state
+        const {email, password } = this.props.fields
 
         if (email.length === 0 || password.length === 0) {
             return
@@ -73,7 +70,7 @@ class Login extends Component {
                         type='email'
                         width={5}
                         onChange={this.handleChange}
-                        value={this.state.email}
+                        value={this.props.fields.email}
                     />
                     <Form.Input
                         fluid
@@ -83,7 +80,7 @@ class Login extends Component {
                         type='password'
                         width={5}
                         onChange={this.handleChange}
-                        value={this.state.password}
+                        value={this.props.fields.password}
                     />
                     <div className='login-buttons'>
                         <Form.Button type='submit' primary
@@ -107,4 +104,25 @@ class Login extends Component {
     }
 }
 
-export default Login
+const mapStateToProps = (state) => {
+    return {
+        authError: state.authError,
+        fields: {
+            email: state.login.email,
+            password: state.login.password,
+        },
+        isAuthError: state.isAuthError,
+        isAuthErrorDismissed: state.isAuthErrorDismissed,
+        isAuthLoading: state.isAuthLoading,
+        isLoggedIn: state.isLoggedIn,
+        isSignUpLoading: state.isSignUpLoading
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        handleLoginInputChange: (value) => dispatch( handleLoginInputChange(value) ) 
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Login)

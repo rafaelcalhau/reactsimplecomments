@@ -1,21 +1,17 @@
 import React, {Component} from 'react'
 import { Button, Icon } from 'semantic-ui-react'
+import { connect } from 'react-redux'
 
-class NewComment extends Component {
-   
-    state = {
-        newComment: ''
-    }
-    
+import { handleNewComment } from './actions'
+export class NewComment extends Component {
+
     handleChange = event => {
-        this.setState({
-            newComment: event.target.value
-        })
+        this.props.handleNewComment(event.target.value)
     }
 
     sendComment = () => {
-        this.props.sendComment(this.state.newComment)
-        this.setState({ newComment: '' })
+        this.props.sendComment(this.props.newComment)
+        this.props.handleNewComment('')
         this.refs.messageBox.focus();
     }
 
@@ -23,11 +19,11 @@ class NewComment extends Component {
         return (
             <div className="ui form">
                 <div className='field'>
-                    <textarea ref="messageBox" rows={4} value={ this.state.newComment } 
+                    <textarea ref="messageBox" rows={4} value={ this.props.newComment } 
                         onChange={this.handleChange}></textarea>
                 </div>
                 <Button primary animated onClick={this.sendComment} className="right floated">
-                    <Button.Content visible>Comment</Button.Content>
+                    <Button.Content visible>Send</Button.Content>
                     <Button.Content hidden><Icon name='save' /></Button.Content>
                 </Button>
             </div>
@@ -36,4 +32,16 @@ class NewComment extends Component {
 
 }
 
-export default NewComment
+const mapStateToProps = (state) => {
+    return {
+        newComment: state.newComment
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        handleNewComment: (value) => dispatch( handleNewComment(value) )
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(NewComment)

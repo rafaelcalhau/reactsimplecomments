@@ -1,46 +1,30 @@
-import React, { Component } from 'react';
-import { Container, Row, Col } from 'reactstrap';
+import React, { Component } from 'react'
+import { auth, database } from './firebase'
+import { connect } from 'react-redux'
+import { Container, Row, Col } from 'reactstrap'
 import { Header, Icon, Segment } from 'semantic-ui-react'
 
+import { isAuthErrorDismissed, setComments, setLoading, setState } from './actions'
 import Login from './Login'
 import Comments from './Comments'
 import NewComment from './NewComment'
 import User from './User'
+
 class App extends Component {
-	state = {
-		authError: '',
-		comments: {},
-		isAuthError: false,
-		isAuthErrorDismissed: true,
-		isAuthLoading: false,
-		isLoading: false,
-		isLoggedIn: false,
-		isSignUpLoading: false,
-		user: {
-			id: null,
-			email: null
-		}
-	}
 
 	componentDidMount() {
-		// Life cycle's component
-
-		const { auth, database } = this.props
-
-		this.setState({ isLoading: true })
+		this.props.setLoading(true)
 		this.comments = database.ref('comments')
 
 		// Everytime database value is changed, we'll have a new snapshot
 		this.comments.on('value', snapshot => {
-			this.setState({
-				comments: snapshot.val(),
-				isLoading: false
-			})
+			this.props.setComments(snapshot.val())
+			this.props.setLoading(false)
 		})
 
 		auth.onAuthStateChanged( user => {
 			if (user) {
-				this.setState({ 
+				this.props.setState({ 
 					isAuthErrorDismissed: true,
 					isAuthLoading: false,
 					isLoggedIn: true, 
@@ -48,10 +32,10 @@ class App extends Component {
 					user: {
 						id: user.uid,
 						email: user.email
-					} 
+					}
 				})
 			} else {
-				this.setState({
+				this.props.setState({
 					isAuthErrorDismissed: true,
 					isLoggedIn: false,
 					isSignUpLoading: false,
@@ -65,13 +49,12 @@ class App extends Component {
 	}
 
 	handleDismiss = () => {
-        this.setState({ isAuthErrorDismissed: true })
+		this.props.isAuthErrorDismissed(true)
     }
 
 	login = async(email, password) => {
-		const { auth } = this.props
 
-		this.setState({
+		this.props.setState({
 			authError: '',
 			isAuthError: false,
 			isAuthLoading: true
@@ -82,7 +65,8 @@ class App extends Component {
 			// Promisse (Async request)
 			// using await, we make the runtime wait the promisse response
 			const { additionalUserInfo } = await auth.signInWithEmailAndPassword(email, password)
-			this.setState({
+
+			this.props.setState({
 				isAuthLoading: false,
 				isLoggedIn: true, 
 				user: { 
@@ -92,7 +76,7 @@ class App extends Component {
 			})
 
 		} catch (err) {
-			this.setState({
+			this.props.setState({
 				authError: err.code,
 				isAuthError: true,
 				isAuthErrorDismissed: false,
@@ -101,9 +85,7 @@ class App extends Component {
 		}
 	}
 
-	logout = () => {
-		const { auth } = this.props
-		
+	logout = () => {		
 		try {
 			auth.signOut()
 		} catch(err) {
@@ -116,22 +98,21 @@ class App extends Component {
 			return false;
 		}
 
-		const id = this.props.database.ref().child('comments').push().key
+		const id = database.ref().child('comments').push().key
 		const comments = {}
 
 		comments['comments/' + id] = { 
 			comment,
-			email: this.state.user.email,
-			userId: this.state.user.id
+			email: this.props.user.email,
+			userId: this.props.user.id
 		}
 		
-		this.props.database.ref().update(comments)
+		database.ref().update(comments)
 	}
 
 	signup = async(email, password) => {
-		const { auth } = this.props
-
-		this.setState({
+		
+		this.props.setState({
 			authError: '',
 			isAuthError: false,
 			isSignUpLoading: true
@@ -141,7 +122,8 @@ class App extends Component {
 			// Promisse (Async request)
 			// using await, we make the runtime wait the promisse response
 			const { additionalUserInfo } = await auth.createUserWithEmailAndPassword(email, password)
-			this.setState({ 
+
+			this.props.setState({ 
 				isSignUpLoading: false,
 				isLoggedIn: true, 
 				user: { 
@@ -151,7 +133,7 @@ class App extends Component {
 			})
 
 		} catch (err) {
-			this.setState({
+			this.props.setState({
 				authError: err.code,
 				isAuthError: true,
 				isAuthErrorDismissed: false,
@@ -168,7 +150,10 @@ class App extends Component {
 					<Col sm="12" md={{ size: 10, offset: 1 }}>
 						<Segment.Group piled>
 							<Segment>
-								{ this.state.isLoggedIn && <br /> }
+								{ 
+									//this.state.isLoggedIn && <br /> 
+									this.props.isLoggedIn && <br /> 
+								}
 								<Header as='h2' icon textAlign='center'>
 									<Icon name='comment alternate outline' />
 									React Simple Comments
@@ -178,26 +163,24 @@ class App extends Component {
 								</Header>
 
 								{
-									!this.state.isLoggedIn 
+									!this.props.isLoggedIn 
 										? 
-											<Login login={this.login} signup={this.signup} 
-												isAuthError={this.state.isAuthError}
-												isAuthErrorDismissed={this.state.isAuthErrorDismissed}
-												isAuthLoading={this.state.isAuthLoading}
-												isLoggedIn={this.state.isLoggedIn}
-												isSignUpLoading={this.state.isSignUpLoading}
-												authError={this.state.authError}
-												handleDismiss={this.handleDismiss} /> 
+											<Login login={this.login} 
+													signup={this.signup} 
+													handleDismiss={this.handleDismiss} /> 
 										: 
 											<div>
-												<User email={this.state.user.email} logout={this.logout} />
+												<User logout={this.logout} />
 												<NewComment sendComment={this.sendComment} />
 											</div>
 								}
 
-								<Comments comments={this.state.comments} className="clearedbox" />
+								{
+									this.props.isLoading && <p><br/>Loading...<br/></p>
+								}
 
-								{this.state.isLoading && <p><br/>Loading...</p>}
+								<Comments className="clearedbox" />
+
 							</Segment>
 						</Segment.Group>
 					</Col>
@@ -207,4 +190,26 @@ class App extends Component {
 	}
 }
 
-export default App;
+const mapStateToProps = (state) => {
+	return {
+		authError: state.authError,
+		comments: state.comments,
+		isAuthError: state.isAuthError,
+		isAuthErrorDismissed: state.isAuthErrorDismissed,
+		isAuthLoading: state.isAuthLoading,
+		isLoading: state.isLoading,
+		isLoggedIn: state.isLoggedIn,
+		isSignUpLoading: state.isSignUpLoading,
+		user: state.user
+	}
+}
+const mapDispatchToProps = (dispatch) => {
+	return {
+		setComments: (value) => dispatch( setComments(value) ), 
+		isAuthErrorDismissed: (value) => dispatch( isAuthErrorDismissed(value) ), 
+		setLoading: (value) => dispatch( setLoading(value) ), 
+		setState: (value) => dispatch( setState(value) )
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(App)

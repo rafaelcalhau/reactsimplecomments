@@ -1,6 +1,6 @@
 import React from 'react'
 import { mount, shallow } from 'enzyme'
-import NewComment from './NewComment'
+import { NewComment } from './NewComment'
 import { Button } from 'semantic-ui-react'
 
 describe('<NewComment />', () => {
@@ -9,31 +9,33 @@ describe('<NewComment />', () => {
         const event = {
             target: { value: 'test'}
         }
-        const wrapper = shallow(<NewComment />)
+        const handleNewComment = jest.fn()
+        const wrapper = shallow(<NewComment handleNewComment={handleNewComment} />)
 
+        expect(wrapper.find('textarea').length).toEqual(1)
         wrapper.find('textarea').simulate('change', event)
-        expect(wrapper.state().newComment).toBe('test')
+
+        expect(handleNewComment.mock.calls.length).toEqual(1)
 
     })
 
+    
     it('should call send comment on button click', () => {
 
-        // Let's create a mock function
+        const handleNewComment = jest.fn()
         const sendComment = jest.fn();
-        //
 
         const event = {
             target: { value: 'testing...'}
         }
-        const wrapper = mount(<NewComment sendComment={sendComment} />)
-
-        expect(wrapper.state().newComment).toBe('')
+        const wrapper = mount(
+            <NewComment 
+                newComment={event.target.value}
+                sendComment={sendComment} 
+                handleNewComment={handleNewComment} />)
 
         wrapper.find('textarea').simulate('change', event)
-        expect(wrapper.state().newComment).toBe('testing...')
-
         wrapper.find(Button).simulate('click')
-        expect(wrapper.state().newComment).toBe('')
         
         expect(sendComment).toBeCalled()
         expect(sendComment).toBeCalledWith('testing...')

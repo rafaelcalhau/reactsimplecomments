@@ -1,6 +1,8 @@
 import React from 'react'
 import { Card, Icon } from 'semantic-ui-react'
 
+import CommentSignature from './CommentSignature'
+
 // Pure-functions: good practice when you stateless component.
 const Comment = ({ node }) => {
     let comment = '-'
@@ -20,10 +22,7 @@ const Comment = ({ node }) => {
                 <Icon disabled name="angle right" />
                 { comment }
                 { 
-                    email !== '-' &&
-                    <div className="sentBy">
-                        <small className="grey">Sent by {email}</small>
-                    </div> 
+                    email !== '-' && <CommentSignature email={email} />
                 } 
             </Card.Content>
         </Card>

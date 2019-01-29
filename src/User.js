@@ -1,22 +1,23 @@
-import React, { Component } from 'react'
+import React from 'react'
 import { Icon, Label } from 'semantic-ui-react'
+import { connect } from 'react-redux'
 
-class User extends Component {
-    logout = e => {
-        this.props.logout()
-    }
+const User = ({ email, logout }) => {
+    return (
+        <div>
+            <Label className="fluid" attached='top'>
+                <Icon name='user' />
+                Logged in as { email }
+                <Icon link name='sign out alternate' onClick={ () => logout() } className="right floated" />
+            </Label>
+        </div>
+    )
+}
 
-    render() {
-        return (
-            <div>
-                <Label className="fluid" attached='top'>
-                    <Icon name='user' />
-                    Logged in as { this.props.email }
-                    <Icon link name='sign out alternate' onClick={this.logout} className="right floated" />
-                </Label>
-            </div>
-        )
+const mapStateToProps = (state) => {
+    return {
+        email: state.user.email
     }
 }
 
-export default User
+export default connect(mapStateToProps)(User)
